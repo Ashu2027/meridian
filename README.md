@@ -42,8 +42,8 @@ One service layer. Three front-ends:
 We have provided automated setup scripts for both Windows and Linux/macOS. These scripts will automatically create a Python virtual environment (`.venv`), install all required dependencies, and launch the Setup Wizard.
 
 ### Windows
-```cmd
-install.bat
+```powershell
+.\install.bat
 ```
 
 ### Linux / macOS
