@@ -1,32 +1,83 @@
-# Virtual Environments
+# ==============================================================================
+# SECRETS, KEYS, CREDENTIALS & TOKENS (AIRTIGHT SECURITY LOCK)
+# ==============================================================================
+key.bin
+secrets.enc
+*.enc
+*.bin
+*.key
+*.pem
+*.crt
+*.cer
+*.pfx
+*.p12
+*.token
+*.secret
+*.secrets
+secrets.json
+settings.json
+config.json
+credentials.json
+
+# Environment Files
+.env
+.env.*
+*.env
+*.env.local
+
+# Database & SQLite files
+*.db
+*.sqlite
+*.sqlite3
+*.sql.gz
+
+# ==============================================================================
+# DATA, EXPORTS & USER UPLOADS
+# ==============================================================================
+data/
+*.csv
+*.tsv
+*.xlsx
+*.jsonl
+
+# ==============================================================================
+# VIRTUAL ENVIRONMENTS
+# ==============================================================================
 .venv/
 venv/
 env/
+ENV/
+env.bak/
+venv.bak/
 
-# Python Cache
+# ==============================================================================
+# PYTHON CACHE & COMPILED FILES
+# ==============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
 
-# Testing
+# ==============================================================================
+# TESTING & COVERAGE
+# ==============================================================================
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
 
-# Logs
+# ==============================================================================
+# LOGS
+# ==============================================================================
 logs/
 *.log
 
-# Data / User Uploads
-data/imports/
-*.csv
-
-# Secrets (These are usually stored in AppData, but just in case they are dropped here)
-key.bin
-secrets.enc
-.env
-
-# Editor / IDE
+# ==============================================================================
+# IDE, SYSTEM & OS FILES
+# ==============================================================================
 .vscode/
 .idea/
 *.swp
+*.swo
+.DS_Store
+Thumbs.db
