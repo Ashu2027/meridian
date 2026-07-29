@@ -1,0 +1,32 @@
+# Virtual Environments
+.venv/
+venv/
+env/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+logs/
+*.log
+
+# Data / User Uploads
+data/imports/
+*.csv
+
+# Secrets (These are usually stored in AppData, but just in case they are dropped here)
+key.bin
+secrets.enc
+.env
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
