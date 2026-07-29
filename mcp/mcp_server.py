@@ -21,9 +21,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import (
-    CallToolResult, GetPromptResult, ListPromptsResult, ListResourcesResult,
-    ListToolsResult, Prompt, PromptMessage, ReadResourceResult, Resource,
-    TextContent, Tool,
+    CallToolResult, ListResourcesResult, ListToolsResult,
+    ReadResourceResult, Resource, TextContent, Tool,
+    Prompt, PromptMessage, GetPromptResult
 )
 
 from config import load_config, ConfigMissingError
@@ -316,20 +316,9 @@ async def call_tool(name: str, arguments: dict) -> CallToolResult:
 
 # ── Resources ──────────────────────────────────────────────────────────────────
 
-def _load_system_prompt() -> str:
-    prompt_file = Path(__file__).parent.parent / "SYSTEM_PROMPT.md"
-    if prompt_file.exists():
-        return prompt_file.read_text(encoding="utf-8")
-    return "Default Meridian System Instructions: Respect tone split, validate drafts, and never send twice."
-
-
 @_server.list_resources()
 async def list_resources() -> ListResourcesResult:
     return ListResourcesResult(resources=[
-        Resource(uri="meridian://instructions",
-                 name="System Instructions",
-                 description="Default AI Agent System Prompt & Standard Operating Guidelines.",
-                 mimeType="text/markdown"),
         Resource(uri="meridian://tone-settings/active",
                  name="Active Tone Split",
                  description="Current tone split percentages.",
@@ -349,10 +338,7 @@ async def list_resources() -> ListResourcesResult:
 async def read_resource(uri: str) -> ReadResourceResult:
     db = _db_required()
 
-    if uri == "meridian://instructions":
-        return ReadResourceResult(contents=[TextContent(type="text", text=_load_system_prompt())])
-
-    elif uri == "meridian://tone-settings/active":
+    if uri == "meridian://tone-settings/active":
         split = tone_engine.get_active_split(db)
         data = {"professional_percent": split.professional,
                 "semi_casual_percent": split.semi_casual,
@@ -376,33 +362,40 @@ async def read_resource(uri: str) -> ReadResourceResult:
     raise ValueError(f"Unknown resource: {uri}")
 
 
-# ── Prompts ────────────────────────────────────────────────────────────────────
+# ── Prompts (System Instructions for AI) ───────────────────────────────────────
 
 @_server.list_prompts()
-async def list_prompts() -> ListPromptsResult:
-    return ListPromptsResult(prompts=[
+async def handle_list_prompts() -> list[Prompt]:
+    return [
         Prompt(
-            name="outreach_guidelines",
-            description="Default system instructions & operating guidelines for AI agents generating campaigns with Meridian.",
-            arguments=[],
+            name="meridian-agent",
+            description="Default system instructions and guidelines for the Meridian AI agent.",
+            arguments=[]
         )
-    ])
-
+    ]
 
 @_server.get_prompt()
-async def get_prompt(name: str, arguments: Optional[dict] = None) -> GetPromptResult:
-    if name == "outreach_guidelines":
-        return GetPromptResult(
-            description="Meridian AI Agent Standard Operating Guidelines",
-            messages=[
-                PromptMessage(
-                    role="user",
-                    content=TextContent(type="text", text=_load_system_prompt()),
-                )
-            ],
-        )
-    raise ValueError(f"Unknown prompt: {name!r}")
+async def handle_get_prompt(name: str, arguments: dict[str, str] | None) -> GetPromptResult:
+    if name != "meridian-agent":
+        raise ValueError(f"Unknown prompt: {name}")
 
+    prompt_file = Path(__file__).parent.parent / "SYSTEM_PROMPT.md"
+    content = "You are the Meridian AI Agent."
+    if prompt_file.exists():
+        content = prompt_file.read_text(encoding="utf-8")
+
+    return GetPromptResult(
+        description="Meridian system instructions",
+        messages=[
+            PromptMessage(
+                role="user",
+                content=TextContent(
+                    type="text",
+                    text=content
+                )
+            )
+        ]
+    )
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
