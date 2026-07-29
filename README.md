@@ -102,12 +102,41 @@ python main.py server
 The server starts on `http://127.0.0.1:8765` (or your configured port).  
 All endpoints require `Authorization: Bearer <your-token>`.
 
-### MCP Server (for Claude Code / Claude Desktop)
+### MCP Server (for AI Agents like Claude Code / Antigravity / Claude Desktop)
+
+Meridian includes a native **stdio MCP Server** (`mcp/mcp_server.py`) that exposes all features directly as tools to AI agents.
+
+#### Option A: 1-Line Command Setup (Claude Code CLI)
+
+**Windows (PowerShell / cmd):**
 ```bash
-python mcp/mcp_server.py
+claude mcp add meridian -- .venv\Scripts\python.exe mcp\mcp_server.py
 ```
 
-Register in your MCP config pointing at `mcp/mcp_server.py`.
+**Linux / macOS:**
+```bash
+claude mcp add meridian -- .venv/bin/python mcp/mcp_server.py
+```
+
+#### Option B: Global MCP Config File (`claude_desktop_config.json` / `~/.claude.json`)
+
+Add the following to your agent's MCP config file:
+
+```json
+{
+  "mcpServers": {
+    "meridian": {
+      "command": "C:/Users/<YourUsername>/.meridian/.venv/Scripts/python.exe",
+      "args": [
+        "C:/Users/<YourUsername>/.meridian/mcp/mcp_server.py"
+      ]
+    }
+  }
+}
+```
+*(On Linux/macOS, use `/home/<user>/.meridian/.venv/bin/python`)*
+
+Once registered, your agent instantly gains access to native tools: `tone_get`, `tone_set`, `campaign_create`, `campaign_send`, `person_add`, `person_search`.
 
 ---
 

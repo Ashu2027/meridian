@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "meridian": {
+      "command": ".venv/Scripts/python.exe",
+      "args": [
+        "mcp/mcp_server.py"
+      ]
+    }
+  }
+}
