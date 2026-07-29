@@ -153,10 +153,10 @@ async def call_tool(name: str, arguments: dict) -> CallToolResult:
                 email=str(arguments["email"]),
                 designation=str(arguments["designation"]),
                 category=str(arguments["category"]),
-                organization=str(arguments["organization"]) if "organization" in arguments else None,
-                country=str(arguments["country"]) if "country" in arguments else None,
-                preferred_tone=str(arguments["preferred_tone"]) if "preferred_tone" in arguments else None,
-                notes=str(arguments["notes"]) if "notes" in arguments else None
+                organization=str(arguments["organization"]) if arguments.get("organization") is not None else None,
+                country=str(arguments["country"]) if arguments.get("country") is not None else None,
+                preferred_tone=str(arguments["preferred_tone"]) if arguments.get("preferred_tone") is not None else "auto",
+                notes=str(arguments["notes"]) if arguments.get("notes") is not None else None
             )
             p = person_service.add_person(db, p_input)
             return _text({"ok": True, "id": p.id, "full_name": p.full_name, "email": p.email})
