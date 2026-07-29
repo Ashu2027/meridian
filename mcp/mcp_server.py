@@ -61,55 +61,55 @@ def _db_required() -> Database:
 
 # ── Tool definitions ───────────────────────────────────────────────────────────
 
-@_server.list_tools()
+@_server.list_tools()  # type: ignore
 async def list_tools() -> ListToolsResult:
     return ListToolsResult(tools=[
         Tool(name="person_add",         description="Add a new person to the contact database.",
-             inputSchema={"type": "object", "required": ["full_name", "email", "designation", "category"],
+             input_schema={"type": "object", "required": ["full_name", "email", "designation", "category"],
                           "properties": {"full_name": {"type": "string"}, "email": {"type": "string"},
                                          "designation": {"type": "string"}, "category": {"type": "string"},
                                          "organization": {"type": "string"}, "country": {"type": "string"},
                                          "preferred_tone": {"type": "string", "enum": ["auto","professional","semi_casual","casual"]},
                                          "notes": {"type": "string"}}}),
         Tool(name="person_search",      description="Search persons by category, status, or name/email.",
-             inputSchema={"type": "object", "properties": {"category": {"type": "string"},
+             input_schema={"type": "object", "properties": {"category": {"type": "string"},
                                                             "status": {"type": "string"},
                                                             "query": {"type": "string"}}}),
         Tool(name="person_update",      description="Update a person's fields (not email).",
-             inputSchema={"type": "object", "required": ["person_id", "changes"],
+             input_schema={"type": "object", "required": ["person_id", "changes"],
                           "properties": {"person_id": {"type": "integer"},
                                          "changes": {"type": "object"}}}),
         Tool(name="person_set_status",  description="Change a person's status (active/unsubscribed/bounced/archived).",
-             inputSchema={"type": "object", "required": ["person_id", "new_status"],
+             input_schema={"type": "object", "required": ["person_id", "new_status"],
                           "properties": {"person_id": {"type": "integer"},
                                          "new_status": {"type": "string"}}}),
         Tool(name="person_import_csv",  description="Import persons from a CSV file.",
-             inputSchema={"type": "object", "required": ["file_path"],
+             input_schema={"type": "object", "required": ["file_path"],
                           "properties": {"file_path": {"type": "string"}}}),
         Tool(name="tone_get",           description="Get the currently active tone split.",
-             inputSchema={"type": "object", "properties": {}}),
+             input_schema={"type": "object", "properties": {}}),
         Tool(name="tone_set",           description="Set a new tone split (must sum to 100).",
-             inputSchema={"type": "object", "required": ["professional", "semi_casual", "casual"],
+             input_schema={"type": "object", "required": ["professional", "semi_casual", "casual"],
                           "properties": {"professional": {"type": "integer"},
                                          "semi_casual": {"type": "integer"},
                                          "casual": {"type": "integer"},
                                          "note": {"type": "string"}}}),
         Tool(name="campaign_create",    description="Create a new draft campaign.",
-             inputSchema={"type": "object", "required": ["name", "topic_brief"],
+             input_schema={"type": "object", "required": ["name", "topic_brief"],
                           "properties": {"name": {"type": "string"},
                                          "topic_brief": {"type": "string"},
                                          "target_filter": {"type": "object"}}}),
         Tool(name="campaign_recipients",description="Get recipients and their assigned tones for a campaign. Use this to know who to write for.",
-             inputSchema={"type": "object", "required": ["campaign_id"],
+             input_schema={"type": "object", "required": ["campaign_id"],
                           "properties": {"campaign_id": {"type": "integer"}}}),
         Tool(name="draft_validate",     description="Validate a draft message without storing it. Check word count, emoji, boilerplate.",
-             inputSchema={"type": "object", "required": ["person_id", "subject", "body", "tone"],
+             input_schema={"type": "object", "required": ["person_id", "subject", "body", "tone"],
                           "properties": {"person_id": {"type": "integer"},
                                          "subject": {"type": "string"},
                                          "body": {"type": "string"},
                                          "tone": {"type": "string"}}}),
         Tool(name="draft_submit",       description="Submit a validated agent-written draft for operator review.",
-             inputSchema={"type": "object", "required": ["campaign_id", "person_id", "subject", "body", "tone"],
+             input_schema={"type": "object", "required": ["campaign_id", "person_id", "subject", "body", "tone"],
                           "properties": {"campaign_id": {"type": "integer"},
                                          "person_id": {"type": "integer"},
                                          "subject": {"type": "string"},
@@ -117,11 +117,11 @@ async def list_tools() -> ListToolsResult:
                                          "tone": {"type": "string"},
                                          "idempotency_key": {"type": "string"}}}),
         Tool(name="campaign_send",      description="Send all pending drafts for a campaign. REQUIRES confirm=true explicitly.",
-             inputSchema={"type": "object", "required": ["campaign_id", "confirm"],
+             input_schema={"type": "object", "required": ["campaign_id", "confirm"],
                           "properties": {"campaign_id": {"type": "integer"},
                                          "confirm": {"type": "boolean"}}}),
         Tool(name="history_query",      description="Query message history by person_id, campaign_id, or date range.",
-             inputSchema={"type": "object",
+             input_schema={"type": "object",
                           "properties": {"person_id": {"type": "integer"},
                                          "campaign_id": {"type": "integer"},
                                          "date_start": {"type": "string"},
@@ -131,7 +131,7 @@ async def list_tools() -> ListToolsResult:
 
 # ── Tool handler ───────────────────────────────────────────────────────────────
 
-@_server.call_tool()
+@_server.call_tool()  # type: ignore
 async def call_tool(name: str, arguments: dict) -> CallToolResult:
     db = _db_required()
 
@@ -154,7 +154,7 @@ async def call_tool(name: str, arguments: dict) -> CallToolResult:
                  "organization", "country", "preferred_tone", "notes"]
                 if k in ["full_name", "email", "designation", "category"]
                 or arguments.get(k) is not None
-            }))
+            }))  # type: ignore
             return _text({"ok": True, "id": p.id, "full_name": p.full_name, "email": p.email})
 
         elif name == "person_search":
@@ -282,6 +282,7 @@ async def call_tool(name: str, arguments: dict) -> CallToolResult:
                 (arguments["campaign_id"],),
             )
             rate = int(db.get_config_value("send_rate_per_minute", "20"))
+            assert _cfg is not None
             from_addr = f"{_cfg.default_from_name} <{_cfg.default_from_email}>"
             sent = failed = 0
             for r in dispatch(db, approved, _cfg.resend_api_key, from_addr, rate):
@@ -316,7 +317,7 @@ async def call_tool(name: str, arguments: dict) -> CallToolResult:
 
 # ── Resources ──────────────────────────────────────────────────────────────────
 
-@_server.list_resources()
+@_server.list_resources()  # type: ignore
 async def list_resources() -> ListResourcesResult:
     return ListResourcesResult(resources=[
         Resource(uri="meridian://tone-settings/active",
@@ -334,7 +335,7 @@ async def list_resources() -> ListResourcesResult:
     ])
 
 
-@_server.read_resource()
+@_server.read_resource()  # type: ignore
 async def read_resource(uri: str) -> ReadResourceResult:
     db = _db_required()
 
@@ -364,7 +365,7 @@ async def read_resource(uri: str) -> ReadResourceResult:
 
 # ── Prompts (System Instructions for AI) ───────────────────────────────────────
 
-@_server.list_prompts()
+@_server.list_prompts()  # type: ignore
 async def handle_list_prompts() -> list[Prompt]:
     return [
         Prompt(
@@ -374,7 +375,7 @@ async def handle_list_prompts() -> list[Prompt]:
         )
     ]
 
-@_server.get_prompt()
+@_server.get_prompt()  # type: ignore
 async def handle_get_prompt(name: str, arguments: dict[str, str] | None) -> GetPromptResult:
     if name != "meridian-agent":
         raise ValueError(f"Unknown prompt: {name}")
