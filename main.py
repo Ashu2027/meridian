@@ -8,6 +8,7 @@ Entry point for Meridian.
 from __future__ import annotations
 
 import logging
+import logging.handlers
 import sys
 from pathlib import Path
 
@@ -28,8 +29,6 @@ logging.basicConfig(
         ),
     ],
 )
-
-import logging.handlers  # noqa: E402 — imported after basicConfig for handler
 
 logger = logging.getLogger(__name__)
 
