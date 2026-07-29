@@ -1,0 +1,23 @@
+{
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.12",
+  "pythonPlatform": "Windows",
+  "include": [
+    "services",
+    "db",
+    "api",
+    "agent",
+    "mcp",
+    "cli",
+    "tests"
+  ],
+  "exclude": [
+    ".venv",
+    "logs",
+    "data"
+  ],
+  "reportMissingImports": false,
+  "reportMissingModuleSource": false,
+  "typeCheckingMode": "basic"
+}
