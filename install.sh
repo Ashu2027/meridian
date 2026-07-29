@@ -2,30 +2,35 @@
 set -e
 
 echo "======================================================="
-echo "Meridian Installation Setup (Linux / macOS)"
+echo " Meridian End-to-End Setup (Linux / macOS)"
 echo "======================================================="
 echo ""
 
-echo "[1/3] Creating virtual environment (.venv)..."
-if command -v python3 &>/dev/null; then
-    PYTHON_CMD="python3"
-elif command -v python &>/dev/null; then
-    PYTHON_CMD="python"
+if [ -f ".venv/bin/python" ]; then
+    echo "[INFO] Existing virtual environment found in .venv."
+    VENV_PYTHON=".venv/bin/python"
 else
-    echo "[ERROR] Python 3 is not installed or not in PATH."
-    exit 1
+    if command -v python3 &>/dev/null; then
+        PYTHON_SYSTEM="python3"
+    elif command -v python &>/dev/null; then
+        PYTHON_SYSTEM="python"
+    else
+        echo "[ERROR] Python 3 was not found. Please install python3."
+        exit 1
+    fi
+
+    echo "[1/3] Creating virtual environment (.venv) using $PYTHON_SYSTEM..."
+    $PYTHON_SYSTEM -m venv .venv
+    VENV_PYTHON=".venv/bin/python"
 fi
 
-$PYTHON_CMD -m venv .venv
-
 echo "[2/3] Installing dependencies..."
-source .venv/bin/activate
-pip install -r requirements.txt
+"$VENV_PYTHON" -m pip install -r requirements.txt
 
 echo ""
 echo "======================================================="
-echo "Installation Complete!"
+echo " Setup Complete! Launching Meridian..."
 echo "======================================================="
 echo ""
-echo "[3/3] Launching Meridian Setup Wizard..."
-$PYTHON_CMD main.py
+echo "[3/3] Running Meridian..."
+"$VENV_PYTHON" main.py
