@@ -22,7 +22,7 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import (
     CallToolResult, ListResourcesResult, ListToolsResult,
-    ReadResourceResult, Resource, TextContent, Tool,
+    ReadResourceResult, Resource, TextContent, TextResourceContents, Tool,
     Prompt, PromptMessage, GetPromptResult
 )
 
@@ -348,21 +348,21 @@ async def read_resource(uri: str) -> ReadResourceResult:
         data = {"professional_percent": split.professional,
                 "semi_casual_percent": split.semi_casual,
                 "casual_percent": split.casual, "note": split.note}
-        return ReadResourceResult(contents=[TextContent(type="text", text=json.dumps(data))])
+        return ReadResourceResult(contents=[TextResourceContents(uri=uri, mimeType="application/json", text=json.dumps(data))])
 
     elif uri == "meridian://designation-catalog":
         rows = db.fetch_all("SELECT category, standard_title FROM designation_catalog ORDER BY category, standard_title")
         by_cat: dict = {}
         for r in rows:
             by_cat.setdefault(r["category"], []).append(r["standard_title"])
-        return ReadResourceResult(contents=[TextContent(type="text", text=json.dumps(by_cat))])
+        return ReadResourceResult(contents=[TextResourceContents(uri=uri, mimeType="application/json", text=json.dumps(by_cat))])
 
     elif uri == "meridian://persons/recent":
         rows = db.fetch_all(
             "SELECT id, full_name, email, designation, category, status "
             "FROM persons ORDER BY updated_at DESC LIMIT 10"
         )
-        return ReadResourceResult(contents=[TextContent(type="text", text=json.dumps(rows, default=str))])
+        return ReadResourceResult(contents=[TextResourceContents(uri=uri, mimeType="application/json", text=json.dumps(rows, default=str))])
 
     raise ValueError(f"Unknown resource: {uri}")
 
