@@ -1,14 +1,39 @@
-# install.ps1 - End-to-End Automated Meridian Setup for Windows (PowerShell)
+# install.ps1 - Global One-Liner & Local Installer for Meridian (Windows)
 $ErrorActionPreference = "Continue"
 
 Write-Host "=======================================================" -ForegroundColor Cyan
-Write-Host " Meridian End-to-End Setup (Windows PowerShell)" -ForegroundColor Cyan
+Write-Host "      Meridian Precision Outreach Installer           " -ForegroundColor Cyan
 Write-Host "=======================================================" -ForegroundColor Cyan
 Write-Host ""
 
+$targetDir = "$env:USERPROFILE\.meridian"
+
+if (Test-Path "main.py") {
+    $appDir = (Get-Item .).FullName
+} else {
+    Write-Host "[1/4] Setting up application in user profile ($targetDir)..." -ForegroundColor Green
+    if (-not (Test-Path $targetDir)) {
+        if (Get-Command git -ErrorAction SilentlyContinue) {
+            Write-Host "Cloning repository from GitHub..." -ForegroundColor Yellow
+            git clone https://github.com/Ashu2027/meridian.git $targetDir
+        } else {
+            Write-Host "[ERROR] Git is required for remote installation. Please install Git." -ForegroundColor Red
+            Exit 1
+        }
+    } else {
+        Write-Host "Existing installation found at $targetDir. Updating..." -ForegroundColor Yellow
+        Push-Location $targetDir
+        try { git pull } catch {}
+        Pop-Location
+    }
+    $appDir = $targetDir
+}
+
+Set-Location $appDir
+
 function Find-Python {
-    if (Test-Path ".venv\Scripts\python.exe") {
-        return ".venv\Scripts\python.exe"
+    if (Test-Path "$appDir\.venv\Scripts\python.exe") {
+        return "$appDir\.venv\Scripts\python.exe"
     }
 
     $commands = @("py", "python", "python3")
@@ -45,27 +70,27 @@ if (-not $pythonCmd) {
     Exit 1
 }
 
-Write-Host "[1/3] Checking virtual environment (.venv)..." -ForegroundColor Green
-if (-not (Test-Path ".venv\Scripts\python.exe")) {
+Write-Host "[2/4] Checking virtual environment (.venv)..." -ForegroundColor Green
+if (-not (Test-Path "$appDir\.venv\Scripts\python.exe")) {
     Write-Host "Creating .venv using '$pythonCmd'..." -ForegroundColor Yellow
     if ($pythonCmd -eq "py") {
-        & py -3 -m venv .venv
+        & py -3 -m venv "$appDir\.venv"
     } else {
-        & $pythonCmd -m venv .venv
+        & $pythonCmd -m venv "$appDir\.venv"
     }
 } else {
-    Write-Host ".venv already exists. Reusing environment." -ForegroundColor Gray
+    Write-Host ".venv ready." -ForegroundColor Gray
 }
 
-$venvPython = ".venv\Scripts\python.exe"
+$venvPython = "$appDir\.venv\Scripts\python.exe"
 
 if (-not (Test-Path $venvPython)) {
-    Write-Host "[ERROR] Virtual environment Python executable not found at $venvPython." -ForegroundColor Red
+    Write-Host "[ERROR] Virtual environment Python executable not found." -ForegroundColor Red
     Exit 1
 }
 
-Write-Host "[2/3] Installing/updating dependencies in .venv..." -ForegroundColor Green
-& $venvPython -m pip install -r requirements.txt
+Write-Host "[3/4] Installing/updating dependencies in .venv..." -ForegroundColor Green
+& $venvPython -m pip install -r "$appDir\requirements.txt"
 
 Write-Host ""
 Write-Host "=======================================================" -ForegroundColor Cyan
@@ -73,5 +98,5 @@ Write-Host " Setup Complete! Launching Meridian..." -ForegroundColor Cyan
 Write-Host "=======================================================" -ForegroundColor Cyan
 Write-Host ""
 
-Write-Host "[3/3] Running Meridian..." -ForegroundColor Green
-& $venvPython main.py
+Write-Host "[4/4] Starting Meridian..." -ForegroundColor Green
+& $venvPython "$appDir\main.py"

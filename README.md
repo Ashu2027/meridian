@@ -37,13 +37,29 @@ One service layer. Three front-ends:
 
 ---
 
-## Installation & Setup
+## Instant 1-Line Installation
 
-We have provided automated setup scripts for both Windows and Linux/macOS. These scripts will automatically create a Python virtual environment (`.venv`), install all required dependencies, and launch the Setup Wizard.
+Anyone on any computer (or cloud instance) can install and run Meridian with a single terminal command directly from GitHub. It automatically installs Meridian in their user profile (`~/.meridian` or `%USERPROFILE%\.meridian`), sets up the Python virtual environment, installs dependencies, and launches the application!
+
+### Windows (PowerShell)
+```powershell
+irm https://raw.githubusercontent.com/Ashu2027/meridian/main/install.ps1 | iex
+```
+
+### Linux / macOS (Bash)
+```bash
+curl -fsSL https://raw.githubusercontent.com/Ashu2027/meridian/main/install.sh | bash
+```
+
+---
+
+## Local Installation & Setup
+
+If you cloned the project locally, you can run the local setup scripts:
 
 ### Windows
 ```powershell
-.\install.bat
+.\install.ps1
 ```
 
 ### Linux / macOS
