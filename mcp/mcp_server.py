@@ -148,13 +148,17 @@ async def call_tool(name: str, arguments: dict) -> CallToolResult:
     try:
         # ── Persons ────────────────────────────────────────────────────────────
         if name == "person_add":
-            p = person_service.add_person(db, person_service.PersonInput(**{
-                k: arguments.get(k) for k in
-                ["full_name", "email", "designation", "category",
-                 "organization", "country", "preferred_tone", "notes"]
-                if k in ["full_name", "email", "designation", "category"]
-                or arguments.get(k) is not None
-            }))  # type: ignore
+            p_input = person_service.PersonInput(
+                full_name=str(arguments["full_name"]),
+                email=str(arguments["email"]),
+                designation=str(arguments["designation"]),
+                category=str(arguments["category"]),
+                organization=str(arguments["organization"]) if "organization" in arguments else None,
+                country=str(arguments["country"]) if "country" in arguments else None,
+                preferred_tone=str(arguments["preferred_tone"]) if "preferred_tone" in arguments else None,
+                notes=str(arguments["notes"]) if "notes" in arguments else None
+            )
+            p = person_service.add_person(db, p_input)
             return _text({"ok": True, "id": p.id, "full_name": p.full_name, "email": p.email})
 
         elif name == "person_search":
