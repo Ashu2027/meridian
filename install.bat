@@ -71,7 +71,7 @@ exit /b 1
 
 :INSTALL_DEPS
 echo.
-echo [3/4] Installing dependencies...
+echo [3/5] Installing dependencies...
 "%PYTHON_EXE%" -m pip install -r "%APP_DIR%\requirements.txt"
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to install dependencies.
@@ -80,11 +80,25 @@ if %errorlevel% neq 0 (
 )
 
 echo.
+echo [4/5] Setting up global 'meridian' command shortcut...
+if not exist "%APP_DIR%\bin" mkdir "%APP_DIR%\bin"
+(
+  echo @echo off
+  echo "%APP_DIR%\.venv\Scripts\python.exe" "%APP_DIR%\main.py" %%*
+) > "%APP_DIR%\bin\meridian.cmd"
+
+(
+  echo ^& "%APP_DIR%\.venv\Scripts\python.exe" "%APP_DIR%\main.py" $args
+) > "%APP_DIR%\bin\meridian.ps1"
+
+powershell -NoProfile -Command "$p = [Environment]::GetEnvironmentVariable('PATH', 'User'); if ($p -notlike '*%APP_DIR%\bin*') { [Environment]::SetEnvironmentVariable('PATH', $p + ';%APP_DIR%\bin', 'User') }" >nul 2>&1
+
+echo.
 echo =======================================================
 echo  Setup Complete! Launching Meridian...
 echo =======================================================
 echo.
-echo [4/4] Starting Meridian...
+echo [5/5] Starting Meridian...
 "%PYTHON_EXE%" "%APP_DIR%\main.py"
 
 pause
