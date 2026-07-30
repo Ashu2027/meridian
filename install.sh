@@ -49,10 +49,18 @@ fi
 echo "[3/4] Installing dependencies..."
 "$VENV_PYTHON" -m pip install -r "$APP_DIR/requirements.txt"
 
+echo "[4/5] Setting up global 'meridian' command shortcut..."
+mkdir -p "$HOME/.local/bin"
+cat << EOF > "$HOME/.local/bin/meridian"
+#!/bin/sh
+exec "$APP_DIR/.venv/bin/python" "$APP_DIR/main.py" "\$@"
+EOF
+chmod +x "$HOME/.local/bin/meridian"
+
 echo ""
 echo "======================================================="
 echo " Setup Complete! Launching Meridian..."
 echo "======================================================="
 echo ""
-echo "[4/4] Starting Meridian..."
+echo "[5/5] Starting Meridian..."
 "$VENV_PYTHON" "$APP_DIR/main.py"

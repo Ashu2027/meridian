@@ -98,5 +98,20 @@ Write-Host " Setup Complete! Launching Meridian..." -ForegroundColor Cyan
 Write-Host "=======================================================" -ForegroundColor Cyan
 Write-Host ""
 
-Write-Host "[4/4] Starting Meridian..." -ForegroundColor Green
+Write-Host "[4/5] Setting up global 'meridian' command shortcut..." -ForegroundColor Green
+$binDir = "$appDir\bin"
+if (-not (Test-Path $binDir)) { New-Item -ItemType Directory -Path $binDir | Out-Null }
+Set-Content -Path "$binDir\meridian.cmd" -Value "@echo off`r`n`"$appDir\.venv\Scripts\python.exe`" `"$appDir\main.py`" %*"
+Set-Content -Path "$binDir\meridian.ps1" -Value "& `"$appDir\.venv\Scripts\python.exe`" `"$appDir\main.py`" `$args"
+
+$userPath = [Environment]::GetEnvironmentVariable("PATH", "User")
+if ($userPath -notlike "*$binDir*") {
+    try {
+        [Environment]::SetEnvironmentVariable("PATH", "$userPath;$binDir", "User")
+        $env:PATH = "$env:PATH;$binDir"
+        Write-Host "Added $binDir to User PATH." -ForegroundColor Yellow
+    } catch {}
+}
+
+Write-Host "[5/5] Starting Meridian..." -ForegroundColor Green
 & $venvPython "$appDir\main.py"
