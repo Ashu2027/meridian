@@ -25,6 +25,10 @@ else
         cd "$TARGET_DIR" && git pull || true
     fi
     APP_DIR="$TARGET_DIR"
+    if [ -z "$MERIDIAN_BOOTSTRAPPED" ]; then
+        export MERIDIAN_BOOTSTRAPPED=1
+        exec bash "$APP_DIR/install.sh"
+    fi
 fi
 
 cd "$APP_DIR"

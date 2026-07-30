@@ -27,6 +27,11 @@ if (Test-Path "main.py") {
         Pop-Location
     }
     $appDir = $targetDir
+    if (-not $env:MERIDIAN_BOOTSTRAPPED) {
+        $env:MERIDIAN_BOOTSTRAPPED = "1"
+        & "$appDir\install.ps1"
+        Exit $LASTEXITCODE
+    }
 }
 
 Set-Location $appDir
