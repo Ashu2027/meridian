@@ -28,6 +28,11 @@ if exist "main.py" (
         git pull >nul 2>&1
     )
     set "APP_DIR=%TARGET_DIR%"
+    if not defined MERIDIAN_BOOTSTRAPPED (
+        set "MERIDIAN_BOOTSTRAPPED=1"
+        call "%TARGET_DIR%\install.bat"
+        exit /b 0
+    )
 )
 
 cd /d "%APP_DIR%"
