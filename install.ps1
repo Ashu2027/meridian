@@ -31,32 +31,43 @@ if (Test-Path "main.py") {
 
 Set-Location $appDir
 
+function Test-Python($cmd) {
+    try {
+        $res = & $cmd -c "import sys, encodings; print(sys.version_info[0])" 2>&1
+        if ($LASTEXITCODE -eq 0 -and ($res -like "*3*" -or $res -eq "3")) {
+            return $true
+        }
+    } catch {}
+    return $false
+}
+
 function Find-Python {
     if (Test-Path "$appDir\.venv\Scripts\python.exe") {
-        return "$appDir\.venv\Scripts\python.exe"
-    }
-
-    $commands = @("py", "python", "python3")
-    foreach ($cmd in $commands) {
-        try {
-            $ver = & $cmd --version 2>&1
-            if ($LASTEXITCODE -eq 0 -and $ver -notlike "*Microsoft Store*") {
-                return $cmd
-            }
-        } catch {}
+        if (Test-Python "$appDir\.venv\Scripts\python.exe") {
+            return "$appDir\.venv\Scripts\python.exe"
+        }
     }
 
     $searchPaths = @(
-        "$env:LOCALAPPDATA\Programs\Python\Python*\python.exe",
-        "$env:ProgramFiles\Python*\python.exe",
-        "C:\Python*\python.exe"
+        "$env:LOCALAPPDATA\Programs\Python\Python3*\python.exe",
+        "$env:ProgramFiles\Python3*\python.exe",
+        "C:\Python3*\python.exe"
     )
-
     foreach ($pathPattern in $searchPaths) {
         $found = Get-Item $pathPattern -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($found) {
+        if ($found -and (Test-Python $found.FullName)) {
             return $found.FullName
         }
+    }
+
+    $commands = @("python", "python3", "py")
+    foreach ($cmd in $commands) {
+        try {
+            $ver = & $cmd --version 2>&1
+            if ($LASTEXITCODE -eq 0 -and $ver -notlike "*Microsoft Store*" -and (Test-Python $cmd)) {
+                return $cmd
+            }
+        } catch {}
     }
 
     return $null
@@ -65,24 +76,38 @@ function Find-Python {
 $pythonCmd = Find-Python
 
 if (-not $pythonCmd) {
-    Write-Host "[ERROR] Python 3 was not found on your system." -ForegroundColor Red
-    Write-Host "Please install Python from https://www.python.org/downloads/ and ensure 'Add Python to PATH' is checked." -ForegroundColor Yellow
+    Write-Host "[INFO] No working Python 3 installation detected. Attempting automatic installation..." -ForegroundColor Yellow
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        Write-Host "Installing Python 3.12 via winget..." -ForegroundColor Yellow
+        winget install Python.Python.3.12 --accept-package-agreements --accept-source-agreements --silent
+        Start-Sleep -Seconds 5
+        $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [Environment]::GetEnvironmentVariable("PATH", "User")
+        $pythonCmd = Find-Python
+    }
+}
+
+if (-not $pythonCmd) {
+    Write-Host "[ERROR] Python 3 was not found or is corrupted on your system." -ForegroundColor Red
+    Write-Host "Please install Python 3 manually from https://www.python.org/downloads/ and ensure 'Add Python to PATH' is checked." -ForegroundColor Yellow
     Exit 1
 }
 
-Write-Host "[2/4] Checking virtual environment (.venv)..." -ForegroundColor Green
-if (-not (Test-Path "$appDir\.venv\Scripts\python.exe")) {
+Write-Host "[2/5] Creating virtual environment (.venv)..." -ForegroundColor Green
+$venvPython = "$appDir\.venv\Scripts\python.exe"
+
+if (-not (Test-Path $venvPython) -or -not (Test-Python $venvPython)) {
     Write-Host "Creating .venv using '$pythonCmd'..." -ForegroundColor Yellow
-    if ($pythonCmd -eq "py") {
+    if (Test-Path "$appDir\.venv") {
+        Remove-Item -Recurse -Force "$appDir\.venv" -ErrorAction SilentlyContinue
+    }
+    
+    & $pythonCmd -m venv "$appDir\.venv"
+    if (-not (Test-Path $venvPython)) {
         & py -3 -m venv "$appDir\.venv"
-    } else {
-        & $pythonCmd -m venv "$appDir\.venv"
     }
 } else {
-    Write-Host ".venv ready." -ForegroundColor Gray
+    Write-Host ".venv ready and verified." -ForegroundColor Gray
 }
-
-$venvPython = "$appDir\.venv\Scripts\python.exe"
 
 if (-not (Test-Path $venvPython)) {
     Write-Host "[ERROR] Virtual environment Python executable not found." -ForegroundColor Red

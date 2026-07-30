@@ -29,21 +29,48 @@ fi
 
 cd "$APP_DIR"
 
-if [ -f "$APP_DIR/.venv/bin/python" ]; then
-    VENV_PYTHON="$APP_DIR/.venv/bin/python"
-else
-    if command -v python3 &>/dev/null; then
-        PYTHON_SYSTEM="python3"
-    elif command -v python &>/dev/null; then
-        PYTHON_SYSTEM="python"
+find_python() {
+    if command -v python3 &>/dev/null && python3 -c "import sys, encodings" &>/dev/null; then
+        echo "python3"
+    elif command -v python &>/dev/null && python -c "import sys, encodings" &>/dev/null; then
+        echo "python"
     else
-        echo "[ERROR] Python 3 was not found. Please install python3."
-        exit 1
+        echo ""
     fi
+}
 
-    echo "[2/4] Creating virtual environment (.venv)..."
-    $PYTHON_SYSTEM -m venv "$APP_DIR/.venv"
-    VENV_PYTHON="$APP_DIR/.venv/bin/python"
+PYTHON_SYSTEM=$(find_python)
+
+if [ -z "$PYTHON_SYSTEM" ]; then
+    echo "[INFO] Python 3 missing. Attempting automatic installation..."
+    if command -v apt-get &>/dev/null; then
+        sudo apt-get update -y && sudo apt-get install -y python3 python3-venv python3-pip
+    elif command -v brew &>/dev/null; then
+        brew install python3
+    elif command -v dnf &>/dev/null; then
+        sudo dnf install -y python3 python3-pip
+    elif command -v pacman &>/dev/null; then
+        sudo pacman -Sy --noconfirm python python-pip
+    fi
+    PYTHON_SYSTEM=$(find_python)
+fi
+
+if [ -z "$PYTHON_SYSTEM" ]; then
+    echo "[ERROR] Python 3 was not found. Please install python3 and python3-venv."
+    exit 1
+fi
+
+echo "[2/5] Creating virtual environment (.venv)..."
+VENV_PYTHON="$APP_DIR/.venv/bin/python"
+
+if [ ! -f "$VENV_PYTHON" ] || ! "$VENV_PYTHON" -c "import sys, encodings" &>/dev/null; then
+    rm -rf "$APP_DIR/.venv"
+    $PYTHON_SYSTEM -m venv "$APP_DIR/.venv" || {
+        if command -v apt-get &>/dev/null; then
+            sudo apt-get install -y python3-venv
+            $PYTHON_SYSTEM -m venv "$APP_DIR/.venv"
+        fi
+    }
 fi
 
 echo "[3/4] Installing dependencies..."

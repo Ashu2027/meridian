@@ -33,31 +33,31 @@ if exist "main.py" (
 cd /d "%APP_DIR%"
 
 if exist "%APP_DIR%\.venv\Scripts\python.exe" (
-    set "PYTHON_EXE=%APP_DIR%\.venv\Scripts\python.exe"
-    goto INSTALL_DEPS
-)
-
-py -3 --version >nul 2>&1
-if %errorlevel% equ 0 (
-    py -3 -m venv "%APP_DIR%\.venv"
-    if exist "%APP_DIR%\.venv\Scripts\python.exe" (
+    "%APP_DIR%\.venv\Scripts\python.exe" -c "import sys, encodings" >nul 2>&1
+    if %errorlevel% equ 0 (
         set "PYTHON_EXE=%APP_DIR%\.venv\Scripts\python.exe"
         goto INSTALL_DEPS
+    )
+)
+
+for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python3*") do (
+    if exist "%%D\python.exe" (
+        "%%D\python.exe" -c "import sys, encodings" >nul 2>&1
+        if %errorlevel% equ 0 (
+            "%%D\python.exe" -m venv "%APP_DIR%\.venv"
+            if exist "%APP_DIR%\.venv\Scripts\python.exe" (
+                set "PYTHON_EXE=%APP_DIR%\.venv\Scripts\python.exe"
+                goto INSTALL_DEPS
+            )
+        )
     )
 )
 
 python --version >nul 2>&1
 if %errorlevel% equ 0 (
-    python -m venv "%APP_DIR%\.venv"
-    if exist "%APP_DIR%\.venv\Scripts\python.exe" (
-        set "PYTHON_EXE=%APP_DIR%\.venv\Scripts\python.exe"
-        goto INSTALL_DEPS
-    )
-)
-
-for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python*") do (
-    if exist "%%D\python.exe" (
-        "%%D\python.exe" -m venv "%APP_DIR%\.venv"
+    python -c "import sys, encodings" >nul 2>&1
+    if %errorlevel% equ 0 (
+        python -m venv "%APP_DIR%\.venv"
         if exist "%APP_DIR%\.venv\Scripts\python.exe" (
             set "PYTHON_EXE=%APP_DIR%\.venv\Scripts\python.exe"
             goto INSTALL_DEPS
@@ -65,7 +65,24 @@ for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python*") do (
     )
 )
 
-echo [ERROR] Python 3 was not found. Please install Python 3.
+echo [INFO] No working Python 3 found. Attempting automatic installation via winget...
+winget --version >nul 2>&1
+if %errorlevel% equ 0 (
+    echo Installing Python 3.12 via winget...
+    winget install Python.Python.3.12 --accept-package-agreements --accept-source-agreements --silent
+    timeout /t 5 >nul
+    python --version >nul 2>&1
+    if %errorlevel% equ 0 (
+        python -m venv "%APP_DIR%\.venv"
+        if exist "%APP_DIR%\.venv\Scripts\python.exe" (
+            set "PYTHON_EXE=%APP_DIR%\.venv\Scripts\python.exe"
+            goto INSTALL_DEPS
+        )
+    )
+)
+
+echo [ERROR] Python 3 was not found or is corrupted on your system.
+echo Please install Python 3 manually from https://www.python.org/downloads/
 pause
 exit /b 1
 
